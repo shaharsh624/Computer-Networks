@@ -1,0 +1,35 @@
+Q
+
+Suppose you are designing a sliding window protocol
+
+1Mbps p2p link to moon
+
+which has a one way latence if 1.25 sec
+
+assuming each frame carries 1KB of data
+
+what is the min no. of bits for seq no.?
+
+----> 
+
+Bandwidth = 1 Mbps
+Frame size = 1KB
+Tp = 1.25 sec
+RTT = 2 x 1.25 = 2.50
+
+Data Size = 2.5 x 1 Mbps = 2.5 Mbps
+No. of Packets = Data Size / Frame size = 2.5 Mega bits / 1KB = 305
+
+
+
+
+
+
+
+
+
+
+
+
+
+
