@@ -1,0 +1,19 @@
+Enable Switch
+en
+
+Enable switch config mode
+conf t
+
+Remove spanning tree
+no spanning-tree vlan 1
+
+Create spanning tree
+spanning-tree vlan 1
+
+Show Spanning Tree
+sh spanning-tree
+
+
+
+
+

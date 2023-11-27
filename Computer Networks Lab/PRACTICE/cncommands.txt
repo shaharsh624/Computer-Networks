@@ -1,0 +1,52 @@
+------ STP ------
+
+no spanning-tree vlan 1
+
+spanning-tree vlan 1
+sh spanning-tree
+
+
+
+------ VLAN ------
+
+vlan <no>
+name <>
+
+int range f0/1-3
+switchport mode access
+switchport access vlan 10
+
+sh vlan br
+
+
+
+------ RIP ------
+
+router rip
+network <address>
+
+show ip route
+
+
+
+------ OSPF ------
+
+router ospf <no>
+network <ip> <ulta mask> area <area-name>
+
+
+
+------ DHCP ------
+
+hostname dhcp-server
+ip dhcp excluded-address 192.168.1.1
+ip dhcp excluded-address 192.168.2.1
+ip dhcp pool 192.168.1.1
+ network 192.168.1.0 255.255.255.0
+ default-router 192.168.1.1
+ip dhcp pool 192.168.2.1
+ network 192.168.2.0 255.255.255.0
+ default-router 192.168.2.1
+
+
+

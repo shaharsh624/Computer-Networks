@@ -1,0 +1,282 @@
+------ TCP SERVER ------
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class TCPServer
+{
+    public static void main(String[] args) throws IOException{
+        Scanner in = new Scanner(System.in);
+        Socket s1;
+        ServerSocket ss = new ServerSocket(3000);
+        System.out.println("Server is running...");
+        s1 = ss.accept();
+        System.out.println("Connection Established.");
+        while (true) {
+            //Read from Client
+            DataInputStream dis = new DataInputStream(s1.getInputStream());
+            String message = dis.readUTF();
+            if (message.equalsIgnoreCase("exit")) {
+                System.out.println("Client wants to Exit");
+                break;
+            }
+            System.out.println(message);
+
+            //Send to Client
+            OutputStream os = s1.getOutputStream();
+            DataOutputStream dos = new DataOutputStream(os);
+            System.out.print("Enter a message to send Client: ");
+            String str = in.nextLine();
+            dos.writeUTF(str);
+        }
+    }
+}
+
+
+
+------ TCP CLIENT ------
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class TCPClient
+{
+    public static void main(String[] args) throws IOException {
+        boolean stop=false;
+        Scanner in = new Scanner(System.in);
+        try {
+            Socket c1 = new Socket("localhost", 3000);
+            System.out.println("Connection Established");
+            while(true)
+            {
+                //Send to Server
+                OutputStream os = c1.getOutputStream();
+                DataOutputStream dos = new DataOutputStream(os);
+                System.out.print("Enter a message to send Server: ");
+                String str=in.nextLine();
+                dos.writeUTF(str);
+                if(str.equalsIgnoreCase("exit"))
+                    break;
+                //Read from Server
+                InputStream is = c1.getInputStream();
+                DataInputStream dis = new DataInputStream(is);
+                String message = dis.readUTF();
+                System.out.println(message);
+            }
+        }
+        catch (Exception e){
+            System.out.println("No connection");
+        }
+    }
+}
+
+
+
+------ UDP SERVER ------
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
+public class UDPServer {
+    public static void main(String[] args) throws Exception{
+        int port = 9999;
+        DatagramSocket ds = new DatagramSocket(port);
+
+        // Getting Data from client
+        byte[] b1 = new byte[1024];
+        DatagramPacket dp1 = new DatagramPacket(b1, b1.length);
+        ds.receive(dp1);
+
+        // Performing square operation on data received
+        String str = new String(dp1.getData(), 0, dp1.getLength());
+        int num = Integer.parseInt(str.trim());
+        int result = num*num;
+
+        // Sending data back to client
+        byte[] b2 = String.valueOf(result).getBytes();
+        InetAddress ip = InetAddress.getLocalHost();
+        DatagramPacket dp2 = new DatagramPacket(b2, b2.length, ip, dp1.getPort());
+        ds.send(dp2);
+
+        System.out.println("Server is running on port " + port);
+
+    }
+}
+
+
+
+
+------ UDP CLIENT ------
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.Scanner;
+
+public class UDPClient {
+    public static void main(String[] args) throws Exception {
+        int port = 9999;
+        DatagramSocket ds = new DatagramSocket();
+
+        // Preprocessing Data
+        Scanner sc = new Scanner(System.in);  // Create a Scanner object
+        System.out.print("Enter number: ");
+
+        int num = sc.nextInt();
+        byte[] b1 = String.valueOf(num).getBytes();
+
+        // Sending Data to Server
+        InetAddress ip = InetAddress.getLocalHost();
+        DatagramPacket dp1 = new DatagramPacket(b1, b1.length, ip, port);
+        ds.send(dp1);
+
+        // Receiving Data from Server
+        byte[] b2 = new byte[1024];
+        DatagramPacket dp2 = new DatagramPacket(b2, b2.length);
+        ds.receive(dp2);
+
+        String str = new String(dp2.getData(), 0, dp2.getLength());
+        System.out.printf("Square of %d : %s", num, str);
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+------ PYTHON ------
+
+
+
+
+
+
+------ TCP SERVER ------
+import socket
+import threading
+import time
+
+host = "192.168.56.1"
+port = 55555
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind((host, port))
+server.listen()
+
+clients = []
+nicknames = []
+
+
+def broadcast(message):
+    for client in clients:
+        client.send(message)
+
+
+def handle(client):
+    while True:
+        try:
+            message = client.recv(1024)
+            broadcast(message)
+        except:
+            index = clients.index(client)
+            clients.remove(client)
+            client.close()
+            nickname = nicknames[index]
+            broadcast(f"{nickname} left the chat".encode("ascii"))
+            nicknames.remove(nickname)
+            break
+
+
+def recieve():
+    while True:
+        client, address = server.accept()
+        print(f"Connected with {str(address)}")
+        client.send("FIRST".encode("ascii"))
+
+        nickname = client.recv(1024).decode("ascii")
+
+        nicknames.append(nickname)
+        clients.append(client)
+
+        print(f"Nickname of the client is {nickname}")
+        broadcast(f"{nickname} joined".encode("ascii"))
+        client.send("Connected to server".encode("ascii"))
+
+        thread = threading.Thread(target=handle, args=(client,))
+        thread.start()
+
+
+print("Server is Listening")
+recieve()
+
+------ TCP CLIENT ------
+import socket
+import threading
+
+nickname = input("Enter nickname: ")
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(("192.168.56.1", 55555))
+
+stop_thread = False
+
+
+def receive():
+    while True:
+        global stop_thread
+        if stop_thread:
+            break
+        try:
+            message = client.recv(1024).decode("ascii")
+            if message == "FIRST":
+                client.send(nickname.encode("ascii"))
+            else:
+                print(message)
+        except:
+            print("An error occurred!")
+            client.close()
+            break
+
+
+def write():
+    while True:
+        if stop_thread:
+            break
+        message = f'{nickname}: {input("")}'
+        client.send(message.encode("ascii"))
+
+
+receive_thread = threading.Thread(target=receive)
+receive_thread.start()
+write_thread = threading.Thread(target=write)
+write_thread.start()
+
+
+------ UDP SERVER ------
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server.bind(('127.0.0.1', 9999))
+
+message, address = server.recvfrom(1024).decode('utf-8')
+print(message)
+
+server.sendto("Hello Client!".encode('utf-8'), address)
+
+------ UDP CLIENT ------
+import socket 
+
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+client.sendto("Hello Server!".encode('utf-8'), ("127.0.0.1", 9999))
+print(client.recvfrom(1024)[0].decode('utf-8'))
+
+
+
+
+
+
